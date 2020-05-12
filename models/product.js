@@ -2,6 +2,8 @@
 const fs = require('fs');
 const path = require('path');
 
+const Cart = require('./cart');
+
 // remover este vetor para guardar as infos num arquivo
 //const products = [];
 
@@ -32,21 +34,36 @@ const getProductsFromFile = (cb) => {
 }
 
 module.exports = class Product {
-    constructor(title, imageUrl, description, price) {
+    constructor(id, title, imageUrl, price, description) {
+        this.id = id;
         this.title = title;
         this.imageUrl = imageUrl;
-        this.description = description;
         this.price = price;
+        this.description = description;
     }
     
     save() {
         //cb nao eh necessario nessa, visto que a
         //logica aqui eh diferente
         getProductsFromFile(products => {
-            products.push(this);
-            fs.writeFile(p, JSON.stringify(products), err => {
-                console.log(err);
-            });
+            //se o produto ja existe
+            if (this.id) {
+                console.log("Mateus");
+                const existingProductIndex = products.findIndex(prod => prod.id === this.id);
+                const updatedProduct = [...products];
+                updatedProduct[existingProductIndex] = this;
+                fs.writeFile(p, JSON.stringify(updatedProduct), err => {
+                    console.log(err);
+                });
+            } else {
+                //adicionar o id para cada produto ser unico
+                console.log("Tiago");
+                this.id = Math.random().toString();
+                products.push(this);
+                fs.writeFile(p, JSON.stringify(products), err => {
+                    console.log(err);
+                });
+            }
         });
         
         //essa primeira linha eh p o vetor que nao existe mais
@@ -74,6 +91,19 @@ module.exports = class Product {
         //});
     }
     
+    static deleteById(id) {
+        getProductsFromFile(products => {
+            const product = products.find(prod => prod.id === id);
+            const updatedProducts = products.filter(prod => prod.id !== id);
+            //const productIndex = products.findIndex(prod => prod.id === id);
+            fs.writeFile(p, JSON.stringify(updatedProducts), err => {
+                if (!err) {
+                    Cart.deleteProduct(id, product.price);
+                }
+            });
+        });
+    }
+    
     static fetchAll(cb) {
         getProductsFromFile(cb);
         
@@ -97,5 +127,12 @@ module.exports = class Product {
         
         //nao mais necessario visto que nao ha mais o array
         //return products;
+    }
+    
+    static findById(id, cb) {
+        getProductsFromFile(products => {
+            const product = products.find(p => p.id === id);
+            cb(product);
+        });
     }
 }
