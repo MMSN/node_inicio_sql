@@ -5,7 +5,11 @@ const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 
+//controllers
 const errorController = require('./controllers/error')
+
+//util
+const db = require('./util/database');
 
 const app = express();
 
